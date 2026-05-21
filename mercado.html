@@ -8,6 +8,27 @@
 
 <style>
 
+  .agregar-card{
+  cursor:pointer;
+  opacity:0.75;
+  transition:0.3s;
+}
+
+.agregar-card:hover{
+  opacity:1;
+  transform:translateY(-10px) scale(1.03);
+  box-shadow:0 0 35px rgba(255,255,255,0.25);
+}
+
+.agregar-card h3{
+  margin-top:10px;
+}
+
+.agregar-card p{
+  opacity:0.6;
+  font-size:14px;
+}
+
   .producto{
   position: relative;
   overflow: hidden;
@@ -580,6 +601,31 @@ Fragancia elegante y sofisticada.
   localStorage.setItem("perfumes", JSON.stringify(perfumes));
   cargar();
 }
+  
+
+  function agregarPerfume(){
+
+  let nombre = prompt("Nombre del perfume:");
+  if(!nombre) return;
+
+  let p10 = prompt("Precio 10ml:");
+  let p5 = prompt("Precio 5ml:");
+  let img = prompt("Ruta o URL de imagen:");
+
+  perfumes.push([
+    nombre,
+    Number(p10),
+    Number(p5),
+    img
+  ]);
+
+  perfumes.sort((a,b)=> a[0].localeCompare(b[0]));
+
+  localStorage.setItem("perfumes", JSON.stringify(perfumes));
+
+  cargar();
+}
+  
 
   async function agotar(i){
   let nombre = perfumes[i][0];
@@ -704,6 +750,27 @@ async function cargar(){
       </div>
     `;
   });
+
+    if(admin){
+    cont.innerHTML += `
+      <div class="producto agregar-card" onclick="agregarPerfume()">
+        <div style="
+          height:200px;
+          display:flex;
+          align-items:center;
+          justify-content:center;
+          font-size:70px;
+          opacity:0.7;
+        ">
+          +
+        </div>
+
+        <h3>Agregar perfume</h3>
+        <p>Registrar nuevo producto</p>
+      </div>
+    `;
+  }
+  
 }
   
   perfumes = perfumes.map(p => [
@@ -764,6 +831,7 @@ window.cerrarInfo = cerrarInfo;
 window.cerrarModal = cerrarModal;
 window.confirmarCompra = confirmarCompra;
 window.adminMode = adminMode;
+window.agregarPerfume = agregarPerfume;
   
 window.onload = cargar;
 
