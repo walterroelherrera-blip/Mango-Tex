@@ -661,6 +661,32 @@ try{
 }catch{
   perfumes = [];
 }
+  
+
+async function proximamente(i){
+
+  let nombre = perfumes[i][0];
+
+  let ref = doc(db, "stock", "proximamente");
+  let snap = await getDoc(ref);
+
+  let lista = [];
+
+  if(snap.exists()){
+    lista = snap.data().lista || [];
+  }
+
+  if(lista.includes(nombre)){
+    lista = lista.filter(x => x !== nombre);
+  }else{
+    lista.push(nombre);
+  }
+
+  await setDoc(ref, { lista });
+
+  cargar();
+}
+  
 
 // limpiar datos rotos (null, incompletos, etc.)
 perfumes = perfumes.filter(p =>
@@ -705,6 +731,17 @@ async function cargar(){
     agotados = snap.data().lista || [];
 }
   
+
+let proximos = [];
+
+let ref2 = doc(db, "stock", "proximamente");
+let snap2 = await getDoc(ref2);
+
+if(snap2.exists()){
+  proximos = snap2.data().lista || [];
+}
+  
+  
   // limpiar datos rotos
   perfumes = perfumes.filter(p =>
     Array.isArray(p) &&
@@ -715,27 +752,43 @@ async function cargar(){
   perfumes.forEach((p,i)=>{
 
     let esAgotado = agotados.includes(p[0]);
+    let esProximo = proximos.includes(p[0]);
 
     cont.innerHTML += `
       <div class="producto">
 
         ${esAgotado ? `<div class="agotado">AGOTADO</div>` : ""}
 
+        ${esProximo ? `
+        <div class="agotado" style="
+        background:linear-gradient(45deg,#3b82f6,#06b6d4);
+        top:45px;
+        ">
+        PRÓXIMAMENTE
+        </div>
+        ` : ""}
+
         <img src="${p[3]}" onclick="info('${p[0]}')">
 
         <h3>${p[0]}</h3>
 
-        <select onchange="precio(this,${p[1]},${p[2]})" ${esAgotado ? "disabled" : ""}>
+        <select onchange="precio(this,${p[1]},${p[2]})" ${esAgotado || esProximo ? "disabled" : ""}>
           ${p[1] ? `<option value="10">10 ML - $${p[1]}</option>` : ""}
           ${p[2] ? `<option value="5">5 ML - $${p[2]}</option>` : ""}
         </select>
 
         <div class="precio">$${p[1]}</div>
+        
 
         ${esAgotado 
-          ? `<button class="btn" style="background:gray; cursor:not-allowed;" disabled>AGOTADO</button>` 
-          : `<button class="btn" onclick="abrirCompra('${p[0]}', this)">COMPRAR</button>`
+        ? `<button class="btn" style="background:gray; cursor:not-allowed;" disabled>AGOTADO</button>` 
+
+        : esProximo
+        ? `<button class="btn" style="background:#3b82f6; cursor:not-allowed;" disabled>PRÓXIMAMENTE</button>`
+
+        : `<button class="btn" onclick="abrirCompra('${p[0]}', this)">COMPRAR</button>`
         }
+
 
         ${admin ? `
           <button class="btn" onclick="agotar(${i})">
@@ -745,7 +798,11 @@ async function cargar(){
           <button class="btn" onclick="editar(${i})">
             EDITAR
           </button>
-        ` : ""}
+
+          <button class="btn" onclick="proximamente(${i})">
+          ${esProximo ? "QUITAR PRÓXIMO" : "PRÓXIMAMENTE"}
+          </button>
+          ` : ""}
 
       </div>
     `;
@@ -832,6 +889,7 @@ window.cerrarModal = cerrarModal;
 window.confirmarCompra = confirmarCompra;
 window.adminMode = adminMode;
 window.agregarPerfume = agregarPerfume;
+window.proximamente = proximamente;
   
 window.onload = cargar;
 
