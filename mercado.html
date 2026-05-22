@@ -877,8 +877,9 @@ filtrados.forEach((p)=>{
 
         : categoriaActual === "Vestimenta"
         ? `<button class="btn" style="background:#3b82f6;" disabled>PRÓXIMAMENTE</button>`
-        : `<button class="btn" onclick="abrirCompra('${p[0]}', this)">COMPRAR</button>`
 
+        : `<button class="btn" onclick="abrirCompra('${p[0]}', this)">COMPRAR</button>`
+        }
 
         ${admin ? `
           <button class="btn" onclick="agotar(${realIndex})">
