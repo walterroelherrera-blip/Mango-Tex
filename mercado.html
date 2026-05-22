@@ -350,6 +350,40 @@ h1{
   font-size:12px;
 }
 
+.tabs{
+  display:flex;
+  justify-content:center;
+  gap:12px;
+  margin-top:10px;
+  flex-wrap:wrap;
+}
+
+.tab{
+  padding:10px 20px;
+  border:none;
+  border-radius:20px;
+  cursor:pointer;
+
+  background:rgba(255,255,255,0.08);
+  color:white;
+
+  backdrop-filter:blur(10px);
+
+  transition:0.3s;
+}
+  
+
+.tab:hover{
+  transform:translateY(-3px);
+  box-shadow:0 0 15px rgba(255,255,255,0.25);
+}
+
+.tab.active{
+  background:white;
+  color:black;
+}
+  
+
 @media (max-width: 768px){
 
   body{
@@ -418,8 +452,19 @@ h1{
 <button class="admin-btn" onclick="adminMode()">✏️</button>
 
 <h1>Mercado Mangotex</h1>
-<p class="subtitulo">Perfumería</p>
   
+<div class="tabs">
+  <button class="tab active" onclick="cambiarCategoria('Perfumería', this)">
+    Perfumería
+  </button>
+
+  <button class="tab" onclick="cambiarCategoria('Vestimenta', this)">
+    Vestimenta
+  </button>
+</div>
+
+<p class="subtitulo" id="subtituloCategoria">Perfumería</p>
+
 <div class="contenedor" id="perfumes"></div>
 
 <!-- MODAL -->
@@ -596,7 +641,17 @@ Fragancia elegante y sofisticada.
 
   if(!n) return;
 
-  perfumes[i] = [n, p10, p5, img];
+ let categoria = perfumes[i][4] || "Perfumería";
+    
+
+perfumes[i] = [
+  n,
+  Number(p10),
+  Number(p5),
+  img,
+  categoria
+];
+    
 
   localStorage.setItem("perfumes", JSON.stringify(perfumes));
   cargar();
@@ -612,12 +667,19 @@ Fragancia elegante y sofisticada.
   let p5 = prompt("Precio 5ml:");
   let img = prompt("Ruta o URL de imagen:");
 
-  perfumes.push([
-    nombre,
-    Number(p10),
-    Number(p5),
-    img
-  ]);
+  let categoria = prompt("Categoría: Perfumería o Vestimenta");
+
+  if(categoria !== "Vestimenta"){
+  categoria = "Perfumería";
+  }
+
+perfumes.push([
+  nombre,
+  Number(p10),
+  Number(p5),
+  img,
+  categoria || "Perfumería"
+]);
 
   perfumes.sort((a,b)=> a[0].localeCompare(b[0]));
 
@@ -655,6 +717,8 @@ let productoActual = "";
 let tamañoActual = "";
 
 let perfumes = [];
+
+let categoriaActual = "Perfumería";
 
 try{
   perfumes = JSON.parse(localStorage.getItem("perfumes")) || [];
@@ -697,23 +761,33 @@ perfumes = perfumes.filter(p =>
   p[2] != null &&
   p[3] != null
 );
+  
 if(perfumes.length === 0){
   perfumes = [
-    ["Carolina Herrera",120,90,"MANGOTEX IMG WEB/perfumes/Carolina Herrera.webp"],
-    ["Jordan Power",110,80,"MANGOTEX IMG WEB/perfumes/Jordan Power.jpg"],
-    ["MYSLF L'ABSOLU",180,160,"MANGOTEX IMG WEB/perfumes/MYSLF L'ABSOLU.webp"],
-    ["Nautica Blue",70,50,"MANGOTEX IMG WEB/perfumes/Nautica Blue.jpg"],
-    ["Nautica Voyage",60,40,"MANGOTEX IMG WEB/perfumes/Nautica Voyage.jpg"],
-    ["Prada Paradigme",170,150,"MANGOTEX IMG WEB/perfumes/Prada Paradigme.jpg"],
-    ["Stronger With You",190,170,"MANGOTEX IMG WEB/perfumes/Stronger with you.jpg"],
-    ["Valentino Intense",130,100,"MANGOTEX IMG WEB/perfumes/valentino_intense.jpg"],
-    ["Valentino Uomo",120,90,"MANGOTEX IMG WEB/perfumes/valentino_uomo.jpg"],
-    ["Versace Eau Fraiche",140,110,"MANGOTEX IMG WEB/perfumes/Versace Eau Fraiche.jpg"],
-    ["Lattafa Qaed Al Fursan",140,75,"MANGOTEX IMG WEB/perfumes/Lattafa Qaed Al Fursan.webp"],
+    ["Carolina Herrera",120,90,"MANGOTEX IMG WEB/perfumes/Carolina Herrera.webp","Perfumería"],
+
+    ["Jordan Power",110,80,"MANGOTEX IMG WEB/perfumes/Jordan Power.jpg","Perfumería"],
+
+    ["MYSLF L'ABSOLU",180,160,"MANGOTEX IMG WEB/perfumes/MYSLF L'ABSOLU.webp","Perfumería"],
+
+    ["Nautica Blue",70,50,"MANGOTEX IMG WEB/perfumes/Nautica Blue.jpg","Perfumería"],
+
+    ["Nautica Voyage",60,40,"MANGOTEX IMG WEB/perfumes/Nautica Voyage.jpg","Perfumería"],
+
+    ["Prada Paradigme",170,150,"MANGOTEX IMG WEB/perfumes/Prada Paradigme.jpg","Perfumería"],
+
+    ["Stronger With You",190,170,"MANGOTEX IMG WEB/perfumes/Stronger with you.jpg","Perfumería"],
+
+    ["Valentino Intense",130,100,"MANGOTEX IMG WEB/perfumes/valentino_intense.jpg","Perfumería"],
+
+    ["Valentino Uomo",120,90,"MANGOTEX IMG WEB/perfumes/valentino_uomo.jpg","Perfumería"],
+
+    ["Versace Eau Fraiche",140,110,"MANGOTEX IMG WEB/perfumes/Versace Eau Fraiche.jpg","Perfumería"],
+
+    ["Lattafa Qaed Al Fursan",140,75,"MANGOTEX IMG WEB/perfumes/Lattafa Qaed Al Fursan.webp","Perfumería"],
   ];
 
   localStorage.setItem("perfumes", JSON.stringify(perfumes));
-  
 }
 
 // ordenar siempre (aunque ya haya datos guardados)
@@ -746,11 +820,25 @@ if(snap2.exists()){
   // limpiar datos rotos
   perfumes = perfumes.filter(p =>
     Array.isArray(p) &&
-    p.length === 4 &&
-    p[0] && p[1] && p[2] && p[3]
+    p.length >= 4 &&
+    p[0] != null &&
+    p[1] != null &&
+    p[2] != null &&
+    p[3] != null
   );
+  
 
-  perfumes.forEach((p,i)=>{
+  let filtrados = perfumes.filter(p => 
+  (p[4] || "Perfumería") === categoriaActual
+);
+
+filtrados.sort((a,b)=>
+  a[0].localeCompare(b[0])
+);
+
+filtrados.forEach((p)=>{
+
+  let realIndex = perfumes.indexOf(p);
 
     let esAgotado = agotados.includes(p[0]);
     let esProximo = proximos.includes(p[0]);
@@ -787,20 +875,21 @@ if(snap2.exists()){
         : esProximo
         ? `<button class="btn" style="background:#3b82f6; cursor:not-allowed;" disabled>PRÓXIMAMENTE</button>`
 
+        : categoriaActual === "Vestimenta"
+        ? `<button class="btn" style="background:#3b82f6;" disabled>PRÓXIMAMENTE</button>`
         : `<button class="btn" onclick="abrirCompra('${p[0]}', this)">COMPRAR</button>`
-        }
 
 
         ${admin ? `
-          <button class="btn" onclick="agotar(${i})">
+          <button class="btn" onclick="agotar(${realIndex})">
             ${esAgotado ? "DISPONIBLE" : "AGOTAR"}
           </button>
 
-          <button class="btn" onclick="editar(${i})">
+          <button class="btn" onclick="editar(${realIndex})">
             EDITAR
           </button>
 
-          <button class="btn" onclick="proximamente(${i})">
+          <button class="btn" onclick="proximamente(${realIndex})">
           ${esProximo ? "QUITAR PRÓXIMO" : "PRÓXIMAMENTE"}
           </button>
           ` : ""}
@@ -823,7 +912,7 @@ if(snap2.exists()){
           +
         </div>
 
-        <h3>Agregar perfume</h3>
+        <h3>Agregar producto</h3>
         <p>Registrar nuevo producto</p>
       </div>
     `;
@@ -835,7 +924,8 @@ if(snap2.exists()){
   p[0],
   Number(p[1]),
   Number(p[2]),
-  p[3]
+  p[3],
+  p[4] || "Perfumería"
 ]);
 
 function precio(sel,p10,p5){
@@ -880,6 +970,23 @@ function adminMode(){
   alert(admin ? "Admin activado" : "Admin desactivado");
   cargar();
 }
+  
+
+function cambiarCategoria(cat, btn){
+
+  categoriaActual = cat;
+
+  document.getElementById("subtituloCategoria").innerText = cat;
+
+  document.querySelectorAll(".tab").forEach(t=>{
+    t.classList.remove("active");
+  });
+
+  btn.classList.add("active");
+
+  cargar();
+}
+  
 
 window.agotar = agotar;
 window.editar = editar;
