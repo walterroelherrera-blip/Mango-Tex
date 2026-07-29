@@ -342,16 +342,6 @@ h1{
   font-weight:bold;
 }
 
-.agotado{
-  position:absolute;
-  top:10px;
-  left:10px;
-  background:linear-gradient(45deg,red,orange);
-  padding:6px 10px;
-  border-radius:8px;
-  font-size:12px;
-}
-
 .tabs{
   display:flex;
   justify-content:center;
@@ -898,17 +888,6 @@ filtrados.forEach((p)=>{
 
     cont.innerHTML += `
       <div class="producto">
-
-        ${esAgotado ? `<div class="agotado">AGOTADO</div>` : ""}
-
-        ${esProximo ? `
-        <div class="agotado" style="
-        background:linear-gradient(45deg,#3b82f6,#06b6d4);
-        top:45px;
-        ">
-        PRÓXIMAMENTE
-        </div>
-        ` : ""}
 
         <img src="${p[3]}" onclick="info('${p[0]}')">
 
