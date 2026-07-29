@@ -524,6 +524,12 @@ footer p{
   </style>
 
   <script>
+
+    function vibrar(){
+      if(navigator.vibrate){
+      navigator.vibrate(20);
+    }
+}
     
   function irMercado(tipo){
 
@@ -593,13 +599,12 @@ window.addEventListener("scroll", () => {
 
 
 <nav>
-  <button onclick="irA('inicio')">Inicio</button>
-  <button onclick="irA('empresa')">Empresa</button>
-  <button onclick="irA('origen')">Origen</button>
-  <button onclick="irA('redes')">Redes</button>
-  <button onclick="irA('contacto')">Contacto</button>
-  <button onclick="irA('personal')">Personal</button>
-  <button onclick="irMercado('menu')">Mercado</button>
+  <button onclick="vibrar(); irA('empresa')">Empresa</button>
+  <button onclick="vibrar(); irA('origen')">Origen</button>
+  <button onclick="vibrar(); irA('redes')">Redes</button>
+  <button onclick="vibrar(); irA('contacto')">Contacto</button>
+  <button onclick="vibrar(); irA('personal')">Personal</button>
+  <button onclick="vibrar(); irMercado('menu')">Mercado</button>
 </nav>
 
 <section id="inicio">
@@ -613,7 +618,9 @@ window.addEventListener("scroll", () => {
     <div class="contenido-inicio">
       <h1>MANGOTEX</h1>
       <p>Innovación. Calidad. Futuro.</p>
-      <button class="btn-pro" onclick="irMercado('btn')">Ver productos</button>
+      <button class="btn-pro" onclick="vibrar(); irMercado('btn')">
+      Ver productos
+      </button>
     </div>
 
   </div>
