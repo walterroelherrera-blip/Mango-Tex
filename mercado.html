@@ -742,10 +742,17 @@ async function agregarPerfume(){
     categoria = "Perfumería";
   }
 
+  const idProducto = nombre
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+
   try{
 
-    await addDoc(
-      collection(db, "productos"),
+    await setDoc(
+      doc(db, "productos", idProducto),
       {
         nombre: nombre,
         precio10: Number(p10),
@@ -767,14 +774,6 @@ async function agregarPerfume(){
   }
 }
   
-  perfumes.sort((a,b)=> a[0].localeCompare(b[0]));
-
-  localStorage.setItem("perfumes", JSON.stringify(perfumes));
-
-  cargar();
-}
-  
-
   async function agotar(i){
   let nombre = perfumes[i][0];
 
@@ -995,14 +994,6 @@ filtrados.forEach((p)=>{
   }
   
 }
-  
-  perfumes = perfumes.map(p => [
-  p[0],
-  Number(p[1]),
-  Number(p[2]),
-  p[3],
-  p[4] || "Perfumería"
-]);
 
 function precio(sel,p10,p5){
   let div = sel.parentElement.querySelector(".precio");
