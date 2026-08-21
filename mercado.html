@@ -679,54 +679,94 @@ Fragancia elegante y sofisticada.
 `
 };
 
-  function editar(i){
+async function editar(i){
+
   let n = prompt("Nombre:", perfumes[i][0]);
+  if(!n) return;
+
   let p10 = prompt("Precio 10ml:", perfumes[i][1]);
   let p5 = prompt("Precio 5ml:", perfumes[i][2]);
   let img = prompt("Imagen URL:", perfumes[i][3]);
 
-  if(!n) return;
+  let categoria = prompt(
+    "Categoría:",
+    perfumes[i][4] || "Perfumería"
+  );
 
- let categoria = perfumes[i][4] || "Perfumería";
-    
+  if(categoria !== "Vestimenta"){
+    categoria = "Perfumería";
+  }
 
-perfumes[i] = [
-  n,
-  Number(p10),
-  Number(p5),
-  img,
-  categoria
-];
-    
+  const firebaseId = perfumes[i][5];
 
-  localStorage.setItem("perfumes", JSON.stringify(perfumes));
-  cargar();
+  try{
+
+    await updateDoc(
+      doc(db, "productos", firebaseId),
+      {
+        nombre: n,
+        precio10: Number(p10),
+        precio5: Number(p5),
+        imagen: img,
+        categoria: categoria
+      }
+    );
+
+    alert("Producto actualizado ✅");
+
+    cargar();
+
+  }catch(error){
+
+    console.error(error);
+    alert("No se pudo actualizar el producto");
+
+  }
 }
   
 
-  function agregarPerfume(){
+async function agregarPerfume(){
 
-  let nombre = prompt("Nombre del perfume:");
+  let nombre = prompt("Nombre del producto:");
   if(!nombre) return;
 
   let p10 = prompt("Precio 10ml:");
   let p5 = prompt("Precio 5ml:");
   let img = prompt("Ruta o URL de imagen:");
 
-  let categoria = prompt("Categoría: Perfumería o Vestimenta");
+  let categoria = prompt(
+    "Categoría: Perfumería o Vestimenta"
+  );
 
   if(categoria !== "Vestimenta"){
-  categoria = "Perfumería";
+    categoria = "Perfumería";
   }
 
-perfumes.push([
-  nombre,
-  Number(p10),
-  Number(p5),
-  img,
-  categoria || "Perfumería"
-]);
+  try{
 
+    await addDoc(
+      collection(db, "productos"),
+      {
+        nombre: nombre,
+        precio10: Number(p10),
+        precio5: Number(p5),
+        imagen: img,
+        categoria: categoria
+      }
+    );
+
+    alert("Producto agregado ✅");
+
+    cargar();
+
+  }catch(error){
+
+    console.error(error);
+    alert("No se pudo agregar el producto");
+
+  }
+}
+  
   perfumes.sort((a,b)=> a[0].localeCompare(b[0]));
 
   localStorage.setItem("perfumes", JSON.stringify(perfumes));
@@ -766,56 +806,6 @@ let perfumes = [];
 
 let categoriaActual = "Perfumería";
 
-async function migrarProductosAFirebase(){
-
-  const productosIniciales = [
-    ["Carolina Herrera",120,90,"MANGOTEX IMG WEB/perfumes/Carolina Herrera.webp","Perfumería"],
-    ["Jordan Power",110,80,"MANGOTEX IMG WEB/perfumes/Jordan Power.jpg","Perfumería"],
-    ["MYSLF L'ABSOLU",180,160,"MANGOTEX IMG WEB/perfumes/MYSLF L'ABSOLU.webp","Perfumería"],
-    ["Nautica Blue",70,50,"MANGOTEX IMG WEB/perfumes/Nautica Blue.jpg","Perfumería"],
-    ["Nautica Voyage",60,40,"MANGOTEX IMG WEB/perfumes/Nautica Voyage.jpg","Perfumería"],
-    ["Prada Paradigme",170,150,"MANGOTEX IMG WEB/perfumes/Prada Paradigme.jpg","Perfumería"],
-    ["Stronger With You",190,170,"MANGOTEX IMG WEB/perfumes/Stronger with you.jpg","Perfumería"],
-    ["Valentino Intense",130,100,"MANGOTEX IMG WEB/perfumes/valentino_intense.jpg","Perfumería"],
-    ["Valentino Uomo",120,90,"MANGOTEX IMG WEB/perfumes/valentino_uomo.jpg","Perfumería"],
-    ["Versace Eau Fraiche",140,110,"MANGOTEX IMG WEB/perfumes/Versace Eau Fraiche.jpg","Perfumería"],
-    ["Lattafa Qaed Al Fursan",140,75,"MANGOTEX IMG WEB/perfumes/Lattafa Qaed Al Fursan.webp","Perfumería"],
-    ["Mandarin Sky Elixir",160,110,"MANGOTEX IMG WEB/perfumes/Mandarin Sky Elixir EDP.jpg","Perfumería"],
-    ["212 VIP Black",150,85,"MANGOTEX IMG WEB/perfumes/212 VIP BLACK.webp","Perfumería"],
-    ["9PM Elixir",95,55,"MANGOTEX IMG WEB/perfumes/afnan 9pm elixir.webp","Perfumería"]
-  ];
-
-  for(const p of productosIniciales){
-
-    const idProducto = p[0]
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-|-$/g, "");
-
-    await setDoc(
-      doc(db, "productos", idProducto),
-      {
-        nombre: p[0],
-        precio10: p[1],
-        precio5: p[2],
-        imagen: p[3],
-        categoria: p[4]
-      }
-    );
-  }
-
-  alert("✅ Catálogo migrado correctamente a Firebase");
-}
-
-try{
-  perfumes = JSON.parse(localStorage.getItem("perfumes")) || [];
-}catch{
-  perfumes = [];
-}
-  
-
 async function proximamente(i){
 
   let nombre = perfumes[i][0];
@@ -850,46 +840,46 @@ perfumes = perfumes.filter(p =>
   p[2] != null &&
   p[3] != null
 );
-  
-if(perfumes.length === 0){
-  perfumes = [
-    ["Carolina Herrera",120,90,"MANGOTEX IMG WEB/perfumes/Carolina Herrera.webp","Perfumería"],
-
-    ["Jordan Power",110,80,"MANGOTEX IMG WEB/perfumes/Jordan Power.jpg","Perfumería"],
-
-    ["MYSLF L'ABSOLU",180,160,"MANGOTEX IMG WEB/perfumes/MYSLF L'ABSOLU.webp","Perfumería"],
-
-    ["Nautica Blue",70,50,"MANGOTEX IMG WEB/perfumes/Nautica Blue.jpg","Perfumería"],
-
-    ["Nautica Voyage",60,40,"MANGOTEX IMG WEB/perfumes/Nautica Voyage.jpg","Perfumería"],
-
-    ["Prada Paradigme",170,150,"MANGOTEX IMG WEB/perfumes/Prada Paradigme.jpg","Perfumería"],
-
-    ["Stronger With You",190,170,"MANGOTEX IMG WEB/perfumes/Stronger with you.jpg","Perfumería"],
-
-    ["Valentino Intense",130,100,"MANGOTEX IMG WEB/perfumes/valentino_intense.jpg","Perfumería"],
-
-    ["Valentino Uomo",120,90,"MANGOTEX IMG WEB/perfumes/valentino_uomo.jpg","Perfumería"],
-
-    ["Versace Eau Fraiche",140,110,"MANGOTEX IMG WEB/perfumes/Versace Eau Fraiche.jpg","Perfumería"],
-
-    ["Lattafa Qaed Al Fursan",140,75,"MANGOTEX IMG WEB/perfumes/Lattafa Qaed Al Fursan.webp","Perfumería"],
-
-    ["Mandarin Sky Elixir",160,110,"MANGOTEX IMG WEB/perfumes/Mandarin Sky Elixir EDP.jpg","Perfumería"],
-
-    ["212 VIP Black",150,85,"MANGOTEX IMG WEB/perfumes/212 VIP BLACK.webp","Perfumería"],
-
-    ["9PM Elixir",95,55,"MANGOTEX IMG WEB/perfumes/afnan 9pm elixir.webp","Perfumería"],
-
-  ];
-
-  localStorage.setItem("perfumes", JSON.stringify(perfumes));
-}
 
 // ordenar siempre (aunque ya haya datos guardados)
 perfumes.sort((a,b) => a[0].localeCompare(b[0]));
   
+
+async function cargarProductosFirebase(){
+
+  perfumes = [];
+
+  const snapshot = await getDocs(
+    collection(db, "productos")
+  );
+
+  snapshot.forEach(documento => {
+
+    const d = documento.data();
+
+    if(d.nombre === "temporal") return;
+
+    perfumes.push([
+      d.nombre,
+      Number(d.precio10),
+      Number(d.precio5),
+      d.imagen,
+      d.categoria || "Perfumería",
+      documento.id
+    ]);
+
+  });
+
+  perfumes.sort((a,b)=>
+    a[0].localeCompare(b[0])
+  );
+}
+  
+  
 async function cargar(){
+
+  await cargarProductosFirebase();
+  
   let cont = document.getElementById("perfumes");
   cont.innerHTML = "";
 
@@ -1084,7 +1074,6 @@ window.confirmarCompra = confirmarCompra;
 window.adminMode = adminMode;
 window.agregarPerfume = agregarPerfume;
 window.proximamente = proximamente;
-window.migrarProductosAFirebase = migrarProductosAFirebase;
   
 window.onload = cargar;
 
