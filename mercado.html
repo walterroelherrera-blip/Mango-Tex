@@ -481,6 +481,14 @@ h1{
 
   <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    
 import {
   getFirestore,
   doc,
@@ -505,6 +513,14 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+
+const auth = getAuth(app);
+
+window.auth = auth;
+window.signInWithEmailAndPassword = signInWithEmailAndPassword;
+window.signOut = signOut;
+window.onAuthStateChanged = onAuthStateChanged;
+    
 
 window.db = db;
 window.doc = doc;
@@ -1022,20 +1038,50 @@ function confirmarCompra(){
   window.location.href = url;
 }
 
-function adminMode(){
-  let pass = prompt("Contraseña:");
+async function adminMode(){
 
-  if(pass !== "MT-MERCADO2026zz"){
-    alert("Contraseña incorrecta");
+  if(auth.currentUser){
+
+    const salir = confirm(
+      "Modo administrador activo.\n\n¿Quieres cerrar sesión?"
+    );
+
+    if(salir){
+      await signOut(auth);
+      admin = false;
+      alert("Sesión de administrador cerrada");
+      cargar();
+    }
+
     return;
   }
 
-  admin = !admin;
+  const correo = prompt("Correo de administrador:");
+  if(!correo) return;
 
-  console.log("ADMIN:", admin);
+  const clave = prompt("Contraseña:");
+  if(!clave) return;
 
-  alert(admin ? "Admin activado" : "Admin desactivado");
-  cargar();
+  try{
+
+    await signInWithEmailAndPassword(
+      auth,
+      correo,
+      clave
+    );
+
+    admin = true;
+
+    alert("Administrador autenticado ✅");
+
+    cargar();
+
+  }catch(error){
+
+    console.error(error);
+    alert("Acceso denegado ❌");
+
+  }
 }
   
 
@@ -1065,6 +1111,20 @@ window.confirmarCompra = confirmarCompra;
 window.adminMode = adminMode;
 window.agregarPerfume = agregarPerfume;
 window.proximamente = proximamente;
+
+onAuthStateChanged(auth, (usuario) => {
+
+  admin = !!usuario;
+
+  console.log(
+    usuario
+      ? "Administrador autenticado"
+      : "Modo visitante"
+  );
+
+  cargar();
+
+});
   
 window.onload = cargar;
 
