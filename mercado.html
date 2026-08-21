@@ -1040,16 +1040,20 @@ function confirmarCompra(){
 
 async function adminMode(){
 
-  if(auth.currentUser){
+  if(window.auth.currentUser){
 
     const salir = confirm(
       "Modo administrador activo.\n\n¿Quieres cerrar sesión?"
     );
 
     if(salir){
-      await signOut(auth);
+
+      await window.signOut(window.auth);
+
       admin = false;
+
       alert("Sesión de administrador cerrada");
+
       cargar();
     }
 
@@ -1064,8 +1068,8 @@ async function adminMode(){
 
   try{
 
-    await signInWithEmailAndPassword(
-      auth,
+    await window.signInWithEmailAndPassword(
+      window.auth,
       correo,
       clave
     );
@@ -1079,12 +1083,12 @@ async function adminMode(){
   }catch(error){
 
     console.error(error);
+
     alert("Acceso denegado ❌");
 
   }
 }
   
-
 function cambiarCategoria(cat, btn){
 
   categoriaActual = cat;
@@ -1112,21 +1116,23 @@ window.adminMode = adminMode;
 window.agregarPerfume = agregarPerfume;
 window.proximamente = proximamente;
 
-onAuthStateChanged(auth, (usuario) => {
+window.addEventListener("load", () => {
 
-  admin = !!usuario;
+  window.onAuthStateChanged(window.auth, (usuario) => {
 
-  console.log(
-    usuario
-      ? "Administrador autenticado"
-      : "Modo visitante"
-  );
+    admin = !!usuario;
 
-  cargar();
+    console.log(
+      usuario
+        ? "Administrador autenticado"
+        : "Modo visitante"
+    );
+
+    cargar();
+
+  });
 
 });
-  
-window.onload = cargar;
 
   
 document.addEventListener("mousemove", e=>{
