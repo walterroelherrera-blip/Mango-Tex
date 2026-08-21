@@ -821,6 +821,8 @@ let perfumes = [];
 
 let categoriaActual = "Perfumería";
 
+let versionCarga = 0;
+
 async function proximamente(i){
 
   let nombre = perfumes[i][0];
@@ -862,7 +864,7 @@ perfumes.sort((a,b) => a[0].localeCompare(b[0]));
 
 async function cargarProductosFirebase(){
 
-  perfumes = [];
+  const productosFirebase = [];
 
   const snapshot = await getDocs(
     collection(db, "productos")
@@ -874,7 +876,7 @@ async function cargarProductosFirebase(){
 
     if(d.nombre === "temporal") return;
 
-    perfumes.push([
+    productosFirebase.push([
       d.nombre,
       Number(d.precio10),
       Number(d.precio5),
@@ -885,18 +887,19 @@ async function cargarProductosFirebase(){
 
   });
 
-  perfumes.sort((a,b)=>
+  productosFirebase.sort((a,b)=>
     a[0].localeCompare(b[0])
   );
+
+  perfumes = productosFirebase;
 }
   
   
 async function cargar(){
 
+  const miVersion = ++versionCarga;
+
   await cargarProductosFirebase();
-  
-  let cont = document.getElementById("perfumes");
-  cont.innerHTML = "";
 
   let agotados = [];
 
@@ -905,16 +908,157 @@ async function cargar(){
 
   if(snap.exists()){
     agotados = snap.data().lista || [];
-}
-  
+  }
 
-let proximos = [];
+  let proximos = [];
 
-let ref2 = doc(db, "stock", "proximamente");
-let snap2 = await getDoc(ref2);
+  let ref2 = doc(db, "stock", "proximamente");
+  let snap2 = await getDoc(ref2);
 
-if(snap2.exists()){
-  proximos = snap2.data().lista || [];
+  if(snap2.exists()){
+    proximos = snap2.data().lista || [];
+  }
+
+  // Si otra carga comenzó mientras esperábamos Firebase,
+  // cancelamos esta para evitar productos duplicados.
+  if(miVersion !== versionCarga){
+    return;
+  }
+
+  let cont = document.getElementById("perfumes");
+
+  // Limpiar JUSTO antes de renderizar
+  cont.innerHTML = "";
+
+  let filtrados = perfumes.filter(p =>
+    (p[4] || "Perfumería") === categoriaActual
+  );
+
+  filtrados.sort((a,b) =>
+    a[0].localeCompare(b[0])
+  );
+
+  filtrados.forEach((p) => {
+
+    let realIndex = perfumes.indexOf(p);
+
+    let esAgotado = agotados.includes(p[0]);
+    let esProximo = proximos.includes(p[0]);
+
+    cont.innerHTML += `
+      <div class="producto">
+
+        <img src="${p[3]}" onclick="info('${p[0]}')">
+
+        <h3>${p[0]}</h3>
+
+        <select
+          onchange="precio(this,${p[1]},${p[2]})"
+          ${esAgotado || esProximo ? "disabled" : ""}
+        >
+
+          ${p[1]
+            ? `<option value="10">10 ML - $${p[1]}</option>`
+            : ""
+          }
+
+          ${p[2]
+            ? `<option value="5">5 ML - $${p[2]}</option>`
+            : ""
+          }
+
+        </select>
+
+        <div class="precio">$${p[1]}</div>
+
+        ${
+          esAgotado
+
+          ? `<button class="btn"
+              style="background:gray; cursor:not-allowed;"
+              disabled>
+              AGOTADO
+            </button>`
+
+          : esProximo
+
+          ? `<button class="btn"
+              style="background:#3b82f6; cursor:not-allowed;"
+              disabled>
+              PRÓXIMAMENTE
+            </button>`
+
+          : categoriaActual === "Vestimenta"
+
+          ? `<button class="btn"
+              style="background:#3b82f6;"
+              disabled>
+              PRÓXIMAMENTE
+            </button>`
+
+          : `<button
+              class="btn"
+              onclick="abrirCompra('${p[0]}', this)">
+              COMPRAR
+            </button>`
+        }
+
+        ${
+          admin
+          ? `
+            <button
+              class="btn"
+              onclick="agotar(${realIndex})">
+              ${esAgotado ? "DISPONIBLE" : "AGOTAR"}
+            </button>
+
+            <button
+              class="btn"
+              onclick="editar(${realIndex})">
+              EDITAR
+            </button>
+
+            <button
+              class="btn"
+              onclick="proximamente(${realIndex})">
+              ${esProximo
+                ? "QUITAR PRÓXIMO"
+                : "PRÓXIMAMENTE"
+              }
+            </button>
+          `
+          : ""
+        }
+
+      </div>
+    `;
+  });
+
+  if(admin){
+
+    cont.innerHTML += `
+      <div
+        class="producto agregar-card"
+        onclick="agregarPerfume()"
+      >
+
+        <div style="
+          height:200px;
+          display:flex;
+          align-items:center;
+          justify-content:center;
+          font-size:70px;
+          opacity:0.7;
+        ">
+          +
+        </div>
+
+        <h3>Agregar producto</h3>
+        <p>Registrar nuevo producto</p>
+
+      </div>
+    `;
+  }
 }
   
   
@@ -1054,7 +1198,7 @@ async function adminMode(){
 
       alert("Sesión de administrador cerrada");
 
-      cargar();
+
     }
 
     return;
@@ -1077,8 +1221,6 @@ async function adminMode(){
     admin = true;
 
     alert("Administrador autenticado ✅");
-
-    cargar();
 
   }catch(error){
 
